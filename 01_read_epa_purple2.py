@@ -19,6 +19,8 @@ import datetime
 import string
 import pandas as pd
 import geopandas as gpd
+import fiona
+
 
 #live maps
 import folium
@@ -109,7 +111,7 @@ purp_infos = pd.read_excel(purple_stations_info_file)
 
 print purp_infos.head()
 purp_lat = purp_infos['Lat'][:]
-purp_lat = purp_infos['Lat'][:]
+purp_lon = purp_infos['Lon'][:]
 purp_lab = purp_infos['Label'][:]
 purp_ind = get_ind(lim=lim,lons=purp_lon,lats=purp_lat)
 
@@ -134,15 +136,17 @@ epa_ind = get_ind(lim=lim,lons=epa_pm10_lons,lats=epa_pm10_lats)
 
 #static Cartopy map
 fig,ax = make_map()                                             
-ax.scatter(x=purp_infos['Lon'][:],y=purp_infos['Lat'][:],s=5,c='purple',lw=0,label = 'Purple')                                                                                           
-ax.scatter(x=epa_pm10_lons       ,y=epa_pm10_lats       ,s=5,c='blue',lw=0,label = 'EPA PM10')
+ax.scatter(x=purp_infos['Lon'][:],y=purp_infos['Lat'][:],s=15,c='purple',lw=0,label = 'Purple',alpha=0.7)                                                                                           
+ax.scatter(x=epa_pm10_lons       ,y=epa_pm10_lats       ,s=15,c='blue',lw=0,label = 'EPA PM10',alpha=0.7)
 ax.legend()  
+plt.savefig('test_map.png',dpi=450)
+plt.close('all')
 
 # live mplleaflet map
 # Set up figure and axis
 f2, ax2 = plt.subplots(1)
-ax2.scatter(x=purp_infos['Lon'][purp_ind]  ,y=purp_infos['Lat'][purp_ind] ,c='purple')
-ax2.scatter(x=epa_pm10_lons[epa_ind]       ,y=epa_pm10_lats[epa_ind]       ,c='blue')
+ax2.scatter(x=purp_infos['Lon'][purp_ind]  ,y=purp_infos['Lat'][purp_ind] ,c='purple',alpha=0.5,s=25)   
+ax2.scatter(x=epa_pm10_lons[epa_ind]       ,y=epa_pm10_lats[epa_ind]       ,c='blue',alpha=0.5,s=25)   
 ax2.set_xlim(-132,-65)  #lon limits 
 ax2.set_ylim( 20 , 55)  #lat limits  
 mapfile = 'test_mpleaflet.html'
