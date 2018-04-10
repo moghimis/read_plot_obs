@@ -4,11 +4,11 @@
 Read and plot EPA and Purple site
 
 """
-__author__ = "Saeed Moghimi"
+__author__ = "Nastaran Moghimi"
 __copyright__ = "Copyright 2017, UCAR/NOAA"
 __license__ = "GPL"
 __version__ = "1.0"
-__email__ = "moghimis@gmail.com"
+__email__ = "nastrann.moghimi@gmail.com"
 
 
 
