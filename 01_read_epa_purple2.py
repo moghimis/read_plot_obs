@@ -109,7 +109,7 @@ def make_map(projection=ccrs.PlateCarree()):
 purple_stations_info_file = inp_dir + 'PurpleAir_Locations.xlsx'
 purp_infos = pd.read_excel(purple_stations_info_file)
 
-print purp_infos.head()
+print (purp_infos.head())
 purp_lat = purp_infos['Lat'][:]
 purp_lon = purp_infos['Lon'][:]
 purp_lab = purp_infos['Label'][:]
@@ -119,9 +119,12 @@ purp_ind = get_ind(lim=lim,lons=purp_lon,lats=purp_lat)
 #read epa kml files
 fiona.drvsupport.supported_drivers['kml'] = 'rw' # enable KML support which is disabled by default
 fiona.drvsupport.supported_drivers['KML'] = 'rw' # enable KML support which is disabled by default
+
+
+#epa 
 epa_pm10_info_file = inp_dir + 'PM10.kml'
 epa_pm10_locs = gpd.read_file(epa_pm10_info_file)
-print epa_pm10_locs.head()
+print (epa_pm10_locs.head())
  
 n_epa_pm10 = len(epa_pm10_locs.centroid)
 epa_pm10_lons = np.zeros((n_epa_pm10))
@@ -131,26 +134,51 @@ for i in range (n_epa_pm10):
     epa_pm10_lons[i] = epa_pm10_locs.centroid[i].x
     epa_pm10_lats[i] = epa_pm10_locs.centroid[i].y
 
-epa_ind = get_ind(lim=lim,lons=epa_pm10_lons,lats=epa_pm10_lats)
+epa_ind_pm10 = get_ind(lim=lim,lons=epa_pm10_lons,lats=epa_pm10_lats)
+
+
+#epa 
+epa_pm25_info_file = inp_dir + 'PM25.kml'
+epa_pm25_locs = gpd.read_file(epa_pm25_info_file)
+print (epa_pm25_locs.head())
+ 
+n_epa_pm25 = len(epa_pm25_locs.centroid)
+epa_pm25_lons = np.zeros((n_epa_pm25))
+epa_pm25_lats = np.zeros((n_epa_pm25))
+
+for i in range (n_epa_pm25):
+    epa_pm25_lons[i] = epa_pm25_locs.centroid[i].x
+    epa_pm25_lats[i] = epa_pm25_locs.centroid[i].y
+
+epa_ind_pm25 = get_ind(lim=lim,lons=epa_pm10_lons,lats=epa_pm10_lats)
+
+
 
 
 #static Cartopy map
 fig,ax = make_map()                                             
-ax.scatter(x=purp_infos['Lon'][:],y=purp_infos['Lat'][:],s=15,c='purple',lw=0,label = 'Purple',alpha=0.7)                                                                                           
-ax.scatter(x=epa_pm10_lons       ,y=epa_pm10_lats       ,s=15,c='blue',lw=0,label = 'EPA PM10',alpha=0.7)
+ax.scatter(x=purp_infos['Lon'][:],y=purp_infos['Lat'][:],s=15,c='purple',lw=0,label = 'Purple' ,alpha=0.7)                                                                                           
+ax.scatter(x=epa_pm10_lons       ,y=epa_pm10_lats       ,s=15,c='blue'  ,lw=0,label = 'EPA PM10',alpha=0.7)
+ax.scatter(x=epa_pm25_lons       ,y=epa_pm25_lats       ,s=15,c='red'   ,lw=0,label = 'EPA PM25',alpha=0.7)
 ax.legend()  
 plt.savefig('test_map.png',dpi=450)
 plt.close('all')
+
+
 
 # live mplleaflet map
 # Set up figure and axis
 f2, ax2 = plt.subplots(1)
 ax2.scatter(x=purp_infos['Lon'][purp_ind]  ,y=purp_infos['Lat'][purp_ind] ,c='purple',alpha=0.5,s=25)   
 ax2.scatter(x=epa_pm10_lons[epa_ind]       ,y=epa_pm10_lats[epa_ind]       ,c='blue',alpha=0.5,s=25)   
+ax2.scatter(x=epa_pm25_lons[epa_ind]       ,y=epa_pm25_lats[epa_ind]       ,c='red',alpha=0.5,s=25)   
 ax2.set_xlim(-132,-65)  #lon limits 
 ax2.set_ylim( 20 , 55)  #lat limits  
 mapfile = 'test_mpleaflet.html'
 mplleaflet.show(fig=f2,path=mapfile, tiles='mapbox bright')
+
+mapfile = 'test_mpleaflet2.html'
+mplleaflet.show(fig=f2,path=mapfile)
 
 ### nicer                                                                                                                                                                           
 width, height = 1200, 800            
@@ -158,16 +186,25 @@ map = folium.Map(location=[42, -102],
                  zoom_start=3, tiles='OpenStreetMap', width=width, height=height)                        
                                                                                                          
 marker_cluster = folium.MarkerCluster().add_to(map)
-print 'Map EPA pm10 obs ...'             
-for i in epa_ind:                                      
+print ('Map EPA pm10 obs ...'             )
+for i in epa_ind_pm10:                                      
     folium.Marker(location=[epa_pm10_lats[i],epa_pm10_lons[i]],     
                       popup='EPA PM10 (' + epa_pm10_locs.Name[i]+')' ,
                       #icon = epa_ic                
                       icon=folium.Icon(color='blue', icon_color='white')
                       ).add_to(marker_cluster)
                                                                
+
+for i in epa_ind_pm25:                                      
+    folium.Marker(location=[epa_pm25_lats[i],epa_pm25_lons[i]],     
+                      popup='EPA pm25 (' + epa_pm25_locs.Name[i]+')' ,
+                      #icon = epa_ic                
+                      icon=folium.Icon(color='blue', icon_color='white')
+                      ).add_to(marker_cluster)
+
+
                                                                       
-print 'Map purple obs ...'          
+print  ('Map purple obs ...'          )
 for i in purp_ind:                                                      
     folium.Marker(location=[purp_lat[i],purp_lon[i]],
                       popup='Purple (' + purp_lab[i]+')' ,
