@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Read and plot EPA and Purple site
+Read Purple site specs
 
 """
 __author__ = "Nastaran Moghimi"
@@ -18,80 +18,6 @@ import os,sys
 import datetime
 import string
 import pandas as pd
-#import geopandas as gpd
-#import fiona
-
-
-#live maps
-import folium
-#import mplleaflet
-
-#static maps
-import cartopy.crs as ccrs
-from cartopy.mpl.gridliner import (LONGITUDE_FORMATTER,
-                                   LATITUDE_FORMATTER)
-import cartopy.feature as cfeature 
-from matplotlib.offsetbox import AnchoredText
-
-
-
-###functions
-def get_ind(lim,lons,lats):
-
-    
-    [ind] = np.where((lons > lim['xmin']) & 
-                    ( lons < lim['xmax']) & 
-                    ( lats > lim['ymin']) & 
-                    ( lats < lim['ymax']))
-    
-    return ind
-
-
-def make_map(projection=ccrs.PlateCarree()):                                                                                                                                        
-                                                                                           
-    """                                                                          
-    Generate fig and ax using cartopy                                                                    
-    input: projection                                                                                    
-    output: fig and ax                             
-    """                                  
-    alpha = 0.5                                        
-    subplot_kw = dict(projection=projection)                        
-    fig, ax = plt.subplots(figsize=(9, 13),                           
-                           subplot_kw=subplot_kw)   
-    gl = ax.gridlines(draw_labels=True)                                 
-    gl.xlabels_top = gl.ylabels_right = False 
-    gl.xformatter = LONGITUDE_FORMATTER                        
-    gl.yformatter = LATITUDE_FORMATTER                                
-                                    
-        # Put a background image on for nice sea rendering.             
-    ax.stock_img()                                   
-                                                          
-    # Create a feature for States/Admin 1 regions at 1:50m from Natural Earth
-    states_provinces = cfeature.NaturalEarthFeature(                      
-        category='cultural',                  
-        name='admin_1_states_provinces_lines',
-        scale='50m',           
-        facecolor='none')        
-
-    SOURCE = 'Natural Earth'
-    LICENSE = 'public domain'
-                                                                                                                                                                                    
-    ax.add_feature(cfeature.LAND,zorder=0,alpha=alpha)          
-    ax.add_feature(cfeature.COASTLINE,zorder=1,alpha=alpha)
-    ax.add_feature(cfeature.BORDERS,zorder=1,alpha=2*alpha)
-                       
-    ax.add_feature(states_provinces, edgecolor='gray',zorder=1)
-                                                          
-    # Add a text annotation for the license information to the
-    # the bottom right corner.                                            
-    text = AnchoredText(r'$\mathcircled{{c}}$ {}; license: {}'
-                        ''.format(SOURCE, LICENSE),
-                        loc=4, prop={'size': 9}, frameon=True)                                    
-    ax.add_artist(text)                                                                           
-                                         
-    ax.set_xlim(-132,-65)  #lon limits           
-    ax.set_ylim( 20 , 55)  #lat limits   
-    return fig, ax
 
 
 
@@ -104,11 +30,6 @@ lim['ymin']  =  15.0
 lim['ymax']  =  46.3
 
 
-#texas
-lim['xmin']  = -107.0
-lim['xmax']  = -93.5
-lim['ymin']  =  25.1
-lim['ymax']  =  36.6
 
 
 inp_dir = 'inp/'
@@ -125,6 +46,12 @@ epa_pm10_locs      = pd.read_csv(epa_pm10_info_file)
 
 epa_pm25_info_file = inp_dir + 'PM25.csv'
 epa_pm25_locs      = pd.read_csv(epa_pm25_info_file)
+
+
+
+
+
+
 
 
 print 'get index ...'
