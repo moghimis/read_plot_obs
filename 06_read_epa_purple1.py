@@ -1,11 +1,5 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 #!/usr/bin/env python
-
+# -*- coding: utf-8 -*-
 """
 Read and plot EPA and Purple site
 
@@ -14,8 +8,7 @@ __author__ = "Nastaran Moghimi"
 __copyright__ = "Copyright 2017, UCAR/NOAA"
 __license__ = "GPL"
 __version__ = "1.0"
-__email__ = "nastrann.moghimi@gmail.com"
-
+__email__ = "nastarann.moghimi@gmail.com"
 
 
 import matplotlib.pyplot as plt
@@ -40,9 +33,9 @@ import cartopy.feature as cfeature
 from matplotlib.offsetbox import AnchoredText
 
 
+
 ###functions
 def get_ind(lim,lons,lats):
-
     
     [ind] = np.where((lons > lim['xmin']) & 
                     ( lons < lim['xmax']) & 
@@ -99,6 +92,7 @@ def make_map(projection=ccrs.PlateCarree()):
     return fig, ax
 
 
+
 #### MAIN
 #us
 lim = {}
@@ -107,25 +101,105 @@ lim['xmax']  = -55.
 lim['ymin']  =  15.0
 lim['ymax']  =  46.3
 
-
 #texas
-lim['xmin']  = -107.0
+lim['xmin']  = -103.0
 lim['xmax']  = -93.5
 lim['ymin']  =  25.1
-lim['ymax']  =  36.6
-
-
+lim['ymax']  =  34.7
 
 inp_dir = 'inp/'
 
-
 print ('Read ...')
+#read purple exel file                                                                                                                                                              
+#purple_stations_info_file = inp_dir + 'PurpleAir_Locations.xlsx'
+#purp_infos = pd.read_excel(purple_stations_info_file)
+#
+
+
+
+
+
+
+print ('Read XLS')
 #read purple exel file                                                                                                                                                              
 purple_stations_info_file = inp_dir + 'PurpleAir_Locations.xlsx'
 purp_infos = pd.read_excel(purple_stations_info_file)
 
-purp_subset = purp_infos[['ID','ParentID','Label','Lat','Lon', 'PM2_5Value','LastSeen']].copy()
-purp_subset = purp_subset.dropna()
+
+#### JSON ######
+json_file = inp_dir + 'purpuleair.json'
+purp_jsonall = pd.read_json(json_file)
+#
+
+from    collections import defaultdict
+
+purp_outside = defaultdict(dict)
+
+for il in range (len( purp_jsonall)):
+    res      = purp_jsonall.iloc[il]['results']
+    location = res['DEVICE_LOCATIONTYPE']
+    label    = res['Label']
+    print ('  > ',il,location)
+    
+    try:
+        if 'outside' in location:
+            purp_outside [res['ID']]['lat'  ]     = res['Lat']
+            purp_outside [res['ID']]['lon'  ]     = res['Lon']
+            purp_outside [res['ID']]['pm2_5']     = res['PM2_5Value']
+            purp_outside [res['ID']]['last_seen'] = datetime.datetime(1970,1,1) + datetime.timedelta(seconds = res['LastSeen'] )
+            purp_outside [res['ID']]['location' ] = location
+            purp_outside [res['ID']]['label'    ] = label
+        else:
+            print ('     * Not outside')
+    
+    except:
+        print ('===None')
+#############################################
+
+for sta_id in purp_outside.keys():
+    print(sta_id)
+    for id1 in purp_infos.index:
+        if sta_id == purp_infos['ID'][id1]:
+            purp_outside[sta_id]['lat']= purp_infos['Lat'][id1]
+            purp_outside[sta_id]['lon']= purp_infos['Lon'][id1]
+
+
+#####
+purp_in_lim = defaultdict(dict)
+for key in purp_outside.keys():
+    lons = purp_outside [key]['lon']       
+    lats = purp_outside [key]['lat']       
+
+    try:
+        if ((lons > lim['xmin']) & ( lons < lim['xmax']) & ( lats > lim['ymin']) & (lats < lim['ymax'])):
+            purp_in_lim [key]  = purp_outside [key]
+    except:
+        print (key)
+        pass
+
+#plot stations
+print ('Static Cartopy map ...')
+fig,ax = make_map()                                             
+for key in purp_in_lim.keys():
+    ax.scatter(x = purp_in_lim[key]['lon'] , y = purp_in_lim[key]['lat'] ,s=20,lw=0,label = key ,alpha=0.85)
+
+ax.set_title('Purple stations: Outside')
+
+#ax.legend(ncol=4)
+#ax.scatter(x=epa_pm10_locs['lon'][epa_ind_pm10]  ,y=epa_pm10_locs['lat'] [epa_ind_pm10]   ,s=10,c='blue'  ,lw=0,label = 'EPA PM10',alpha=0.7)
+#ax.scatter(x=epa_pm25_locs['lon'][epa_ind_pm25]  ,y=epa_pm25_locs['lat'] [epa_ind_pm25]   ,s=10,c='red'   ,lw=0,label = 'EPA PM25',alpha=0.7)
+#ax.legend()  
+ax.set_xlim(lim['xmin'],lim['xmax'])
+ax.set_ylim(lim['ymin'],lim['ymax'])
+
+plt.savefig('purpule_outside.png',dpi=450)
+plt.show()
+#plt.close('all')
+
+
+
+
+
 
 #read EPA locations from csv                                                                                                                                                         
 epa_pm10_info_file = inp_dir + 'PM10.csv'
@@ -136,7 +210,7 @@ epa_pm25_locs      = pd.read_csv(epa_pm25_info_file)
 
 print ('get index ...')
 #get index of obs sites inside epecific window LIM
-purp_ind     = get_ind(lim=lim,lons=purp_infos   ['Lon'][:],lats=purp_infos   ['Lat'][:])
+
 epa_ind_pm10 = get_ind(lim=lim,lons=epa_pm10_locs['lon'][:],lats=epa_pm10_locs['lat'][:])
 epa_ind_pm25 = get_ind(lim=lim,lons=epa_pm25_locs['lon'][:],lats=epa_pm25_locs['lat'][:])
 
@@ -152,83 +226,31 @@ ax.set_ylim(lim['ymin'],lim['ymax'])
 
 plt.savefig('test_map.png',dpi=450)
 plt.show()
+#plt.close('all')
 
 
-if False:
-    print (' Plot mplleaflet map ...')
-    # live mplleaflet map
-    # Set up figure and axis
-    f2, ax2 = plt.subplots(1)
-    ax2.scatter(x=purp_infos['Lon'][purp_ind]         ,y=purp_infos   ['Lat'][purp_ind]     ,c='purple',alpha=0.5,s=25)   
-    ax2.scatter(x=epa_pm10_locs['lon'][epa_ind_pm10]  ,y=epa_pm10_locs['lat'][epa_ind_pm10] ,c='blue'  ,alpha=0.5,s=25)   
-    ax2.scatter(x=epa_pm25_locs['lon'][epa_ind_pm25]  ,y=epa_pm25_locs['lat'][epa_ind_pm25] ,c='red'   ,alpha=0.5,s=25)   
-    ax2.set_xlim(-132,-65)  #lon limits 
-    ax2.set_ylim( 20 , 55)  #lat limits  
-    #mapfile = 'test_mpleaflet.html'
-    #mplleaflet.show(fig=f2,path=mapfile, tiles='mapbox bright')
-
-    mapfile = 'test_mpleaflet2.html'
-    mplleaflet.show(fig=f2,path=mapfile)
-
-    ### nicer       
-    print (' Plot folium map ...')
-    width, height = 1200, 800            
-    map = folium.Map(location=[42, -102],                                            
-                     zoom_start=3, tiles='OpenStreetMap', width=width, height=height)                        
-                                                                                                             
-    marker_cluster = folium.MarkerCluster().add_to(map)
-    print ('Map EPA pm10 obs ...'             )
-    for i in epa_ind_pm10:                                      
-        folium.Marker(location=[epa_pm10_locs['lat'][i],epa_pm10_locs['lon'][i]],     
-                          popup='EPA PM10 (' + str(epa_pm10_locs.Name[i])+')' ,
-                          #icon = epa_ic                
-                          icon=folium.Icon(color='blue', icon_color='white')
-                          ).add_to(marker_cluster)
-                                                                   
-
-    for i in epa_ind_pm25:                                      
-        folium.Marker(location=[epa_pm25_locs['lat'][i],epa_pm25_locs['lon'][i]],     
-                          popup='EPA pm25 (' + str(epa_pm25_locs.Name[i])+')' ,
-                          #icon = epa_ic                
-                          icon=folium.Icon(color='blue', icon_color='white')
-                          ).add_to(marker_cluster)
-
-    print  ('Map purple obs ...'          )
-    for i in purp_ind:                                                      
-        folium.Marker(location=[purp_infos   ['Lat'][i],purp_infos   ['Lon'][i]],
-                          popup='Purple (' + purp_infos['Label'][i]+')' ,
-                          #icon = epa_ic
-                          icon=folium.Icon(color='purple', icon_color='white')
-                          ).add_to(marker_cluster)
-                                   
-    map.save('test_folium.html')   
-                                     
 
 
-#json_file = inp_dir + 'purpuleair.json'
-json_file =   'p1.json'
-purp_subset = pd.read_json(json_file)
 
 
-from    collections import defaultdict
-purp_outside = defaultdict(dict)
-for il in range (len( purp_subset)):
-    res      = purp_subset.iloc[il]['results']
-    label    = res['Label'].strip()
-    location = res['DEVICE_LOCATIONTYPE']
-    print (il,label,location)
-    
-    try:
-        if 'out' in location:
-            purp_outside [res['ID']]['lat'  ]     = res['Lat']
-            purp_outside [res['ID']]['lon'  ]     = res['Lon']
-            purp_outside [res['ID']]['pm2_5']     = res['PM2_5Value']
-            purp_outside [res['ID']]['last_seen'] = datetime.datetime(1970,1,1) + datetime.timedelta(seconds = res['LastSeen'] )
-            purp_outside [res['ID']]['location' ] = location
-            purp_outside [res['ID']]['label'    ] = label
-    except:
-        print ('None')
-             
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -385,12 +407,6 @@ for il in range (len( purp_subset)):
 #import json
 #json_file = inp_dir + 'purpuleair.json'
 #purp_data     = json.load(open(json_file))
-
-
-
-
-
-
 
 
 
