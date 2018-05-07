@@ -92,7 +92,6 @@ def make_map(projection=ccrs.PlateCarree()):
     return fig, ax
 
 
-
 #### MAIN
 #us
 lim = {}
@@ -104,11 +103,11 @@ lim['ymin']  =  15.0
 lim['ymax']  =  46.3
 
 #texas
-lim['name']  = 'texas'
-lim['xmin']  = -103.0
-lim['xmax']  = -93.5
-lim['ymin']  =  25.1
-lim['ymax']  =  34.7
+lim['name']  = 'arizona'
+lim['xmin']  = -114.85
+lim['xmax']  = -108.9
+lim['ymin']  =  31.1
+lim['ymax']  =  37.1
 
 inp_dir = 'inp/'
 
@@ -215,10 +214,10 @@ print ('Static Cartopy map ...')
 fig,ax = make_map()                                             
 for key in purp_in_lim.keys():
     ax.scatter(x = purp_in_lim[key]['lon'] , y = purp_in_lim[key]['lat'] ,s=20,lw=0, c= 'purple',alpha=0.85)
-    if key == 8682:
-            ax.scatter(x = purp_in_lim[8682]['lon'] , y = purp_in_lim[8682]['lat'] ,s=20,lw=0, c= 'purple', label = 'Purple air' ,alpha=0.85)
+    if key  == 7942:
+            ax.scatter(x = purp_in_lim[7942]['lon'] , y = purp_in_lim[7942]['lat'] ,s=20,lw=0, c= 'purple', label = 'Purple air' ,alpha=0.85)
 
-ax.set_title('Texas Outdoor Stations')
+ax.set_title('Arizona Outdoor Stations')
 
 ax.legend(ncol=4)
 ax.scatter(x=epa_pm10_locs['lon'][epa_ind_pm10]  ,y=epa_pm10_locs['lat'] [epa_ind_pm10]   ,s=10,c='blue'  ,lw=0,label = 'EPA PM10',alpha=0.7)

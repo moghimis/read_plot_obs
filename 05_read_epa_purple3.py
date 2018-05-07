@@ -96,15 +96,12 @@ def make_map(projection=ccrs.PlateCarree()):
 #### MAIN
 #us
 lim = {}
-#####
-lim['name']  = 'us'
 lim['xmin']  = -125.0
 lim['xmax']  = -55.
 lim['ymin']  =  15.0
 lim['ymax']  =  46.3
 
 #texas
-lim['name']  = 'texas'
 lim['xmin']  = -103.0
 lim['xmax']  = -93.5
 lim['ymin']  =  25.1
@@ -183,93 +180,24 @@ for key in purp_outside.keys():
 
 
 
-######################### prepare csv
-id_sta   = []
-lon_sta  = []
-lat_sta  = []
-labels   = []
+####################
 
-
-for key in purp_in_lim.keys():
-    id_sta.append (key)
-    lon_sta.append(purp_in_lim[key]['lon'] )
-    lat_sta.append(purp_in_lim[key]['lat'] )
-    labels.append(purp_in_lim[key]['label'] )
-
-
-id_sta   = np.array(id_sta)
-lon_sta  = np.array(lon_sta)
-lat_sta  = np.array(lat_sta)
-labels   = np.array(labels)
-#
-data_sta = np.c_[id_sta,lon_sta,lat_sta,labels]
-
-df = pd.DataFrame(data=data_sta,columns=['id','lon','lat','label'])
-df.to_csv(lim['name'] + '_purple_air.csv',index=False)
-
-################################# end prepare csv ######################
+if False:
+    for sta_id in purp_in_lim.keys():
+        for id1 in purp_infos.index:
+            if sta_id == purp_infos['ID'][id1]:
+                purp_in_lim[sta_id]['lat']= purp_infos['Lat'][id1]
+                purp_in_lim[sta_id]['lon']= purp_infos['Lon'][id1]
 
 
 #plot stations
 print ('Static Cartopy map ...')
 fig,ax = make_map()                                             
 for key in purp_in_lim.keys():
-    ax.scatter(x = purp_in_lim[key]['lon'] , y = purp_in_lim[key]['lat'] ,s=20,lw=0, c= 'purple',alpha=0.85)
-    if key == 8682:
-            ax.scatter(x = purp_in_lim[8682]['lon'] , y = purp_in_lim[8682]['lat'] ,s=20,lw=0, c= 'purple', label = 'Purple air' ,alpha=0.85)
+    ax.scatter(x = purp_in_lim[key]['lon'] , y = purp_in_lim[key]['lat'] ,s=10,lw=0,label = key ,alpha=0.7)
 
-ax.set_title('Texas Outdoor Stations')
+#ax.legend(ncol=4)
 
-ax.legend(ncol=4)
-ax.scatter(x=epa_pm10_locs['lon'][epa_ind_pm10]  ,y=epa_pm10_locs['lat'] [epa_ind_pm10]   ,s=10,c='blue'  ,lw=0,label = 'EPA PM10',alpha=0.7)
-ax.scatter(x=epa_pm25_locs['lon'][epa_ind_pm25]  ,y=epa_pm25_locs['lat'] [epa_ind_pm25]   ,s=10,c='red'   ,lw=0,label = 'EPA PM25',alpha=0.7)
-ax.legend()  
-ax.set_xlim(lim['xmin'],lim['xmax'])
-ax.set_ylim(lim['ymin'],lim['ymax'])
-
-plt.savefig('purpule_outside.png',dpi=450)
-plt.show()
-#plt.close('all')
-
-
-
-
-#read EPA locations from csv                                                                                                                                                         
-epa_pm10_info_file = inp_dir + 'PM10.csv'
-epa_pm10_locs      = pd.read_csv(epa_pm10_info_file)
-
-epa_pm25_info_file = inp_dir + 'PM25.csv'
-epa_pm25_locs      = pd.read_csv(epa_pm25_info_file)
-
-print ('get index ...')
-#get index of obs sites inside epecific window LIM
-
-epa_ind_pm10 = get_ind(lim=lim,lons=epa_pm10_locs['lon'][:],lats=epa_pm10_locs['lat'][:])
-epa_ind_pm25 = get_ind(lim=lim,lons=epa_pm25_locs['lon'][:],lats=epa_pm25_locs['lat'][:])
-
-
-
-##############
-to_drop = np.setdiff1d (ar1=epa_pm10_locs.index,ar2=epa_ind_pm10)
-epa_pm10_locs_lim = epa_pm10_locs.copy()
-epa_pm10_locs_lim = epa_pm10_locs_lim.drop(to_drop)
-epa_pm10_locs_lim.to_csv(lim['name'] +'_epa_pm10.csv',columns = ['Name', 'lon', 'lat'],index=False)
-##############
-
-
-
-
-
-to_drop = np.setdiff1d (ar1=epa_pm25_locs.index,ar2=epa_ind_pm25)
-epa_pm25_locs_lim = epa_pm25_locs.copy()
-epa_pm25_locs_lim = epa_pm25_locs_lim.drop(to_drop)
-epa_pm25_locs_lim.to_csv(lim['name'] +'_epa_pm25.csv',columns = ['Name', 'lon', 'lat'],index=False)
-
-
-#plot stations
-print ('Static Cartopy map ...')
-fig,ax = make_map()                                             
-ax.scatter(x=purp_infos['Lon'][purp_in_lim]          ,y=purp_infos['Lat'][purp_in_lim]          ,s=10,c='purple',lw=0,label = 'Purple' ,alpha=0.7)                                                                                           
 ax.scatter(x=epa_pm10_locs['lon'][epa_ind_pm10]  ,y=epa_pm10_locs['lat'] [epa_ind_pm10]   ,s=10,c='blue'  ,lw=0,label = 'EPA PM10',alpha=0.7)
 ax.scatter(x=epa_pm25_locs['lon'][epa_ind_pm25]  ,y=epa_pm25_locs['lat'] [epa_ind_pm25]   ,s=10,c='red'   ,lw=0,label = 'EPA PM25',alpha=0.7)
 ax.legend()  
@@ -282,6 +210,38 @@ plt.show()
 
 
 
+
+
+
+
+
+
+#read EPA locations from csv                                                                                                                                                         
+epa_pm10_info_file = inp_dir + 'PM10.csv'
+epa_pm10_locs      = pd.read_csv(epa_pm10_info_file)
+
+epa_pm25_info_file = inp_dir + 'PM25.csv'
+epa_pm25_locs      = pd.read_csv(epa_pm25_info_file)
+
+print 'get index ...'
+#get index of obs sites inside epecific window LIM
+
+epa_ind_pm10 = get_ind(lim=lim,lons=epa_pm10_locs['lon'][:],lats=epa_pm10_locs['lat'][:])
+epa_ind_pm25 = get_ind(lim=lim,lons=epa_pm25_locs['lon'][:],lats=epa_pm25_locs['lat'][:])
+
+#plot stations
+print 'Static Cartopy map ...'
+fig,ax = make_map()                                             
+ax.scatter(x=purp_infos['Lon'][purp_ind]          ,y=purp_infos['Lat'][purp_ind]          ,s=10,c='purple',lw=0,label = 'Purple' ,alpha=0.7)                                                                                           
+ax.scatter(x=epa_pm10_locs['lon'][epa_ind_pm10]  ,y=epa_pm10_locs['lat'] [epa_ind_pm10]   ,s=10,c='blue'  ,lw=0,label = 'EPA PM10',alpha=0.7)
+ax.scatter(x=epa_pm25_locs['lon'][epa_ind_pm25]  ,y=epa_pm25_locs['lat'] [epa_ind_pm25]   ,s=10,c='red'   ,lw=0,label = 'EPA PM25',alpha=0.7)
+ax.legend()  
+ax.set_xlim(lim['xmin'],lim['xmax'])
+ax.set_ylim(lim['ymin'],lim['ymax'])
+
+plt.savefig('test_map.png',dpi=450)
+plt.show()
+#plt.close('all')
 
 
 

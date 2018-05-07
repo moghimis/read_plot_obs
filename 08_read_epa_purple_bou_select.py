@@ -20,6 +20,7 @@ import pandas as pd
 #import geopandas as gpd
 #import fiona
 
+from    collections import defaultdict
 
 #live maps
 import folium
@@ -33,7 +34,6 @@ import cartopy.feature as cfeature
 from matplotlib.offsetbox import AnchoredText
 
 
-
 ###functions
 def get_ind(lim,lons,lats):
     
@@ -43,6 +43,21 @@ def get_ind(lim,lons,lats):
                     ( lats < lim['ymax']))
     
     return ind
+
+
+def get_ind_bou(bou_lons,bou_lats,lons,lats):
+    
+    [ind] = np.where((lons > lim['xmin']) & 
+                    ( lons < lim['xmax']) & 
+                    ( lats > lim['ymin']) & 
+                    ( lats < lim['ymax']))
+    
+    return ind
+
+
+
+
+
 
 
 def make_map(projection=ccrs.PlateCarree()):                                                                                                                                        
@@ -91,24 +106,163 @@ def make_map(projection=ccrs.PlateCarree()):
     ax.set_ylim( 20 , 55)  #lat limits   
     return fig, ax
 
+from grid import BoundaryInteractor
+def generate_boundary_file(state = 'texas', lim = lim):
+    
+
+
 
 
 #### MAIN
-#us
-lim = {}
+region = defaultdict(dict)
 #####
-lim['name']  = 'us'
-lim['xmin']  = -125.0
-lim['xmax']  = -55.
-lim['ymin']  =  15.0
-lim['ymax']  =  46.3
+name = 'us'
+region[name]['xmin']  = -125.0
+region[name]['xmax']  = -55.
+region[name]['ymin']  =  15.0
+region[name]['ymax']  =  46.3
 
-#texas
-lim['name']  = 'texas'
-lim['xmin']  = -103.0
-lim['xmax']  = -93.5
-lim['ymin']  =  25.1
-lim['ymax']  =  34.7
+name = 'texas'
+region[name]['xmin']  = -107.0
+region[name]['xmax']  = -92.9
+region[name]['ymin']  =  24.0
+region[name]['ymax']  =  38.1
+
+
+name = 'arizona'
+region[name]['xmin']  = -114.85
+region[name]['xmax']  = -108.9
+region[name]['ymin']  =  31.1
+region[name]['ymax']  =  37.1
+
+
+
+
+
+
+lim = region['texas']
+
+
+
+
+
+
+
+def write_cnt_xy(filename = 'points.py',interactive_line = None):
+    f = open(filename,'w')
+    f.write('x = [')
+    for ix in range(len(cnt_line.x)):
+        f.write('    '+str(cnt_line.x[ix])+',\n')
+    f.write    ('    ]\n')
+    #
+    f.write('y = [')
+    for ix in range(len(cnt_line.x)):
+        f.write('    '+str(cnt_line.y[ix])+',\n')
+    f.write    ('    ]\n')
+ 
+    f.write('xx = [')
+    for ix in range(len(cnt_line.xx)):
+        f.write('    '+str(cnt_line.xx[ix])+',\n')
+    f.write    ('    ]\n')
+    #
+    f.write('yy = [')
+    for ix in range(len(cnt_line.xx)):
+        f.write('    '+str(cnt_line.yy[ix])+',\n')
+    f.write    ('    ]\n')
+    f.close()
+    
+def wait():
+    while True:
+        choice = input("Enter bb when you are done .. > ")
+        if choice == 'bb' :
+            break
+
+
+
+
+
+
+
+def create_boundary(name = 'texas', region = region):
+    lim = region[name]
+    filename = name + '_bou.txt'
+
+    if (not os.path.exists(filename)):
+        fig,ax = make_map()       
+        ax.set_xlim(lim['xmin'],lim['xmax'])  
+        ax.set_ylim(lim['ymin'],lim['ymax'])
+
+        poly = pl_tools.InteractiveLine(type='cblin')
+        plt.show()
+        wait()
+    
+        # Open filename
+        f = open(filename,'w')
+        for i in range(len(poly.x)):
+            f.write( str(poly.x[i])+ '  ' +str(poly.y[i]) + '  \n' )
+        
+        f.close()    
+    
+        lons = poly.x
+        lats = poly.y
+    else:
+        bou = np.loadtxt(filename)
+        lons = bou[:,0]
+        lats = bou[:,1] 
+
+    return lons,lats 
+
+
+
+
+
+def creat_center_line(lim = lim):
+cwd      = os.getcwd()
+fname    = 'points.py'
+filename = cwd + '/' + fname
+if (not os.path.exists(filename)):
+    # Just a test we need to replace this with a plan plot of the river
+     
+    fig,ax = make_map()   
+    ax. 
+    cnt_line = pl_tools.InteractiveLine(type='cblin')
+    plt.show()
+    wait()
+     
+    write_cnt_xy(filename = filename, interactive_line = cnt_line)
+else:
+    try: 
+        os.system('rm '+fname+'c'  )
+    except:
+        pass
+     
+    if fname[:-3] in sys.modules:  
+        del(sys.modules[fname[:-3]])
+     
+    import points
+    
+    return points.xx,points.yy 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 inp_dir = 'inp/'
 
@@ -134,7 +288,7 @@ json_file = inp_dir + 'purpuleair.json'
 purp_jsonall = pd.read_json(json_file)
 #
 
-from    collections import defaultdict
+
 
 purp_outside = defaultdict(dict)
 
@@ -209,16 +363,15 @@ df.to_csv(lim['name'] + '_purple_air.csv',index=False)
 
 ################################# end prepare csv ######################
 
-
 #plot stations
 print ('Static Cartopy map ...')
 fig,ax = make_map()                                             
 for key in purp_in_lim.keys():
     ax.scatter(x = purp_in_lim[key]['lon'] , y = purp_in_lim[key]['lat'] ,s=20,lw=0, c= 'purple',alpha=0.85)
-    if key == 8682:
-            ax.scatter(x = purp_in_lim[8682]['lon'] , y = purp_in_lim[8682]['lat'] ,s=20,lw=0, c= 'purple', label = 'Purple air' ,alpha=0.85)
+    if key  == 7942:
+            ax.scatter(x = purp_in_lim[7942]['lon'] , y = purp_in_lim[7942]['lat'] ,s=20,lw=0, c= 'purple', label = 'Purple air' ,alpha=0.85)
 
-ax.set_title('Texas Outdoor Stations')
+ax.set_title('Arizona Outdoor Stations')
 
 ax.legend(ncol=4)
 ax.scatter(x=epa_pm10_locs['lon'][epa_ind_pm10]  ,y=epa_pm10_locs['lat'] [epa_ind_pm10]   ,s=10,c='blue'  ,lw=0,label = 'EPA PM10',alpha=0.7)
