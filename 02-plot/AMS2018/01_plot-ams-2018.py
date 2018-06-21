@@ -99,8 +99,8 @@ region = defaultdict(dict)
 name = 'US'
 region[name]['xmin']  = -125.0
 region[name]['xmax']  = -55.
-region[name]['ymin']  =  15.0
-region[name]['ymax']  =  46.3
+region[name]['ymin']  =  20.0
+region[name]['ymax']  =  52.0
 
 name = 'Texas'
 region[name]['xmin']  = -107.0
@@ -126,7 +126,7 @@ region[name]['ymax']  =  42.55
 #####################################################
 
 names = ['US', 'Arizona', 'California', 'Texas']
-
+#names = ['US']
 
 
 
@@ -151,7 +151,7 @@ for name in names:
         print (name , group) 
         df = grp.get_group(group)
         fig,ax = make_map()                                             
-        ax.set_title('Location of ' + group + ' for EPA and Purple stations in '+ name)
+        ax.set_title('Location of ' + group + ' for EPA and Purple stations in '+ name +'(#'+str(len(df.epa_lat))+')')
         ax.scatter(x = df.epa_lon , y = df.epa_lat ,s=40,lw=0, c= 'red' , label = 'EPA'    ,alpha=0.85)
         ax.scatter(x = df.p_lon   , y = df.p_lat   ,s=10,lw=0, c= 'blue', label = 'Purple' ,alpha=0.85)
         ax.legend(ncol=4)
@@ -162,6 +162,50 @@ for name in names:
         plt.close('all')
 
 
+
+
+#All in the same map
+
+for name in names:
+    #get lim
+    lim = region[name]
+
+    #plot stations
+    print ('Static Cartopy map ...')
+    fig,ax = make_map()                                             
+    for group in ['PM2.5', 'PM10' ]:
+        print (name , group) 
+        df = grp.get_group(group)
+        
+        if   group == 'PM2.5':
+            epa_lab = 'EPA PM2.5'    + ' (#'+str(len(df.epa_lat))+')'
+            epa_col = 'r'
+            epa_mar = 's'
+            
+            pur_lab = 'Purple PM2.5' +' (#'+str(len(df.epa_lat))+')'
+            pur_col = 'k'
+            pur_mar = '+'
+            
+        elif group == 'PM10':
+            epa_lab = 'EPA PM10' + ' (#'+str(len(df.epa_lat))+')'
+            epa_col = 'b'
+            epa_mar = 'o'
+            
+            pur_lab = 'Purple PM10' + ' (#'+str(len(df.epa_lat))+')'
+            pur_cpl = 'k'
+            pur_mar = 'x'            
+
+
+        ax.set_title('Location of EPA and Purple stations in '+ name )
+        ax.scatter(x = df.epa_lon , y = df.epa_lat , s=15 , lw=1 , c= epa_col , marker = epa_mar, label = epa_lab , alpha=0.85)
+        ax.scatter(x = df.p_lon   , y = df.p_lat   , s=15 , lw=1 , c= pur_col , marker = pur_mar, label = pur_lab , alpha=0.85)
+        ax.legend(ncol=2)
+        ax.legend()  
+        ax.set_xlim(lim['xmin'],lim['xmax'])
+        ax.set_ylim(lim['ymin'],lim['ymax'])
+    
+    plt.savefig(name+'_'+'all_stations.png',dpi=600)
+    plt.close('all')
 
 
 
